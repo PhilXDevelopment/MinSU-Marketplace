@@ -15,9 +15,12 @@ export default function Layout() {
     return()=>clearTimeout(timer);
   },[]);
 
+
+
   return (  
     <>
     {loading ? <Loader/>: <MainContent/>}
+
     </>
   )
 }

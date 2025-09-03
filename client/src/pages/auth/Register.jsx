@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react"
 import { Outlet } from "react-router-dom"
 import axios from "axios";
-import AlertMessage from "../../MessageAlert";
+import { ToastContainer, toast } from 'react-toastify';
 
 
 export default function Register(){
-    const [message,setMessage]=useState("");
+    const [loading, setLoading]=useState(false)
     const [firstname,setFirstName]=useState("");
     const [error_firstname,setErrorFirstName]=useState("");
     const [middlename,setMiddleName]=useState("");
@@ -24,7 +24,8 @@ export default function Register(){
     const [error_confirm_password,setErrorConfirmPassword]=useState("");
     const apiBaseUrl="http://localhost:5000";
 
-    // const showMessage=AlertMessage();
+
+
 
     const handleFirstname=(e)=>{
         const val=e.target.value
@@ -116,21 +117,43 @@ export default function Register(){
 
     const handleRegistration=async(e)=>{
         e.preventDefault();
-        try{
-            const res= await axios.post(`${apiBaseUrl}/api/register`,{
-                firstname,middlename,lastname,birthday,gender,email,password
+    
+        setLoading(true)
+            try {
+                if (
+            !firstname.trim() ||
+            !lastname.trim() ||
+            !gender.trim() ||
+            !birthday.trim() ||
+            !email.trim() ||
+            !password.trim() ||
+            !confirm_password.trim()
+        ) {
+            console.log("all fields are required")
+        }
+                
+            const res = await axios.post(`${apiBaseUrl}/register`, {
+                firstname,
+                middlename,
+                lastname,
+                gender,
+                birthday,
+                email,
+                password,
             });
-            // if(res.status==200){
-            //     showMessage(message,"notify",200)
-            // }
-            
-        }catch(err){
-        
+            console.log(res)
+            toast(res.data.message)
+    } catch (err) {
+      console.error(err);
+      setMessage("Something went wrong!");
+    }finally{
+        setLoading(false)
     }
 
     }
     return(
        <div className="w-full flex justify-center">
+        <ToastContainer />
           <form onSubmit={handleRegistration} id="RegisterUserForm" className="w-1/2 bg-white shadow-xl/35 p-3 rounded-sm space-y-4">
         <div className="flex flex-wrap w-full space-x-4 ">
             <div className="w-[30%]">
@@ -284,9 +307,19 @@ export default function Register(){
         </div>
         </div>
 
+        <button
+        type="submit"
+        disabled={loading} // ✅ disable when loading
+        className={`px-6 py-2 rounded text-white ${
+          loading ? "bg-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        }`}
+      >
+        {loading ? "Submitting..." : "Submit"}
+      </button>
+{/* 
         <button type="submit" className="mt-4 bg-emerald-700 text-white px-4 py-2 rounded">
             Submit
-        </button>
+        </button> */}
         </form>
 
        <Outlet/>
