@@ -24,6 +24,14 @@ export default function Register(){
     const [error_confirm_password,setErrorConfirmPassword]=useState("");
     const apiBaseUrl="http://localhost:5000";
 
+    const fields=[        
+                 firstname,
+                middlename,
+                lastname,
+                gender,
+                birthday,
+                email,
+                password,];
 
 
 
@@ -89,15 +97,18 @@ export default function Register(){
                 setErrorEmail("Field Required");
         }
     }
-       const handlePassword=(e)=>{
-        const val=e.target.value
-        setPassword(val)
-            if (val.trim() !== "") {
-            setErrorPassword(""); 
-        } else {
-            setErrorPassword("Field Required");
-        }
-    }
+        const handlePassword = (e) => {
+            const val = e.target.value;
+            setPassword(val);
+
+            if (val.trim() === "") {
+                setErrorPassword("Field Required");
+            } else if (val.trim().length < 8) {
+                setErrorPassword("Minimum password length is 8 characters");
+            } else {
+                setErrorPassword("");
+            }
+        };
        const handleConfirmPassword=(e)=>{
         const val=e.target.value
         setConfirmPassword(val)
@@ -115,48 +126,101 @@ export default function Register(){
         
     }
 
-    const handleRegistration=async(e)=>{
-        e.preventDefault();
-    
-        setLoading(true)
-            try {
-                if (
-            !firstname.trim() ||
-            !lastname.trim() ||
-            !gender.trim() ||
-            !birthday.trim() ||
-            !email.trim() ||
-            !password.trim() ||
-            !confirm_password.trim()
-        ) {
-            console.log("all fields are required")
-        }
-                
-            const res = await axios.post(`${apiBaseUrl}/register`, {
-                firstname,
-                middlename,
-                lastname,
-                gender,
-                birthday,
-                email,
-                password,
-            });
-            console.log(res)
-            toast(res.data.message)
-    } catch (err) {
-      console.error(err);
-      setMessage("Something went wrong!");
-    }finally{
-        setLoading(false)
+    const handleRegistration = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    // 1. Validate required fields
+    if (
+      !firstname.trim() ||
+      !lastname.trim() ||
+      !gender.trim() ||
+      !birthday.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirm_password.trim()
+    ) {
+      toast.error("All fields are required");
+      return;
     }
 
+    // 2. Validate password length
+    if (password.trim().length < 8) {
+      setErrorPassword("Minimum password length is 8 characters");
+      return;
     }
+
+    // 3. Check if account already exists
+    const checkRes = await axios.get(`${apiBaseUrl}/check-existing-account`, {
+      params: {
+        firstname,
+        middlename,
+        lastname,
+        gender,
+        birthday,
+        email,
+      },
+    });
+
+    if (checkRes.data.exists) {
+      toast.error("⚠️ Account already exists");
+      return;
+    }
+
+    // 4. Register new account
+    const res = await axios.post(`${apiBaseUrl}/register`, {
+      firstname,
+      middlename,
+      lastname,
+      gender,
+      birthday,
+      email,
+      password,
+    });
+
+    if (res.status === 200) {
+      // Clear fields
+      setFirstName("");
+      setMiddleName("");
+      setLastName("");
+      setBirthday("");
+      setEmail("");
+      setGender("");
+      setPassword("");
+      setConfirmPassword("");
+
+      toast.success(res.data.message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+    } else {
+      toast.error("Something went wrong!");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("❌ Server error, please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
+
     return(
        <div className="w-full flex justify-center">
         <ToastContainer />
-          <form onSubmit={handleRegistration} id="RegisterUserForm" className="w-1/2 bg-white shadow-xl/35 p-3 rounded-sm space-y-4">
+          <form onSubmit={handleRegistration} id="RegisterUserForm" className="w-1/2 bg-white shadow-xl/35 py-10 rounded-sm space-y-4 px-5">
+          <div className="">
+            <p className="text-emerald-700">Register now! to be part of</p>
+             <span className="text-3xl font-semibold">
+                Mindoro State University Marketplace</span>
+          </div>
         <div className="flex flex-wrap w-full space-x-4 ">
-            <div className="w-[30%]">
+            <div className="w-[32%]">
             <label htmlFor="firstname">First Name</label>
             <input
                 type="text"
@@ -174,7 +238,7 @@ export default function Register(){
             </span>
             </div>
 
-            <div  className="w-[30%]" >
+            <div  className="w-[32%]" >
             <label htmlFor="middlename">Middle Name</label>
             <input
                 type="text"
@@ -192,7 +256,7 @@ export default function Register(){
             </span>
             </div>
 
-            <div  className="w-[30%]">
+            <div  className="w-[32%]">
             <label htmlFor="lastname">Last Name</label>
             <input
                 type="text"
@@ -306,20 +370,28 @@ export default function Register(){
             </span>
         </div>
         </div>
-
-        <button
+        <div className="space-y-4">
+            <div className="">
+                 <p>By clicking the Sign Up button you are agreeing to the MinSU Marketplace <a href="" className="font-semibold text-blue-500"> Terms of Use</a> and <a href="" className="font-semibold text-blue-500">Privacy Act</a></p>
+            </div>
+            <div className="flex justify-center w-full">
+               
+                      <button
         type="submit"
         disabled={loading} // ✅ disable when loading
-        className={`px-6 py-2 rounded text-white ${
+        className={`px-6 py-2 rounded text-white px-10 ${
           loading ? "bg-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {loading ? "Submitting..." : "Submit"}
+        {loading ? "Processing..." : "Register"}
       </button>
-{/* 
-        <button type="submit" className="mt-4 bg-emerald-700 text-white px-4 py-2 rounded">
-            Submit
-        </button> */}
+      </div>
+      <div className="text-center">
+        <a href="" className="font-semibold text-emerald-700">Alerady have an account?</a>
+      </div>
+        </div>
+
+
         </form>
 
        <Outlet/>

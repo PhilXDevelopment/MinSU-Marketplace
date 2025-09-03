@@ -30,6 +30,56 @@ db.connect((err) => {
   console.log("✅ MySQL connected");
 });
 
+app.get("/check-existing-account", async (req, res) => {
+  const {
+    firstname,
+    middlename,
+    lastname,
+    gender,
+    birthday,
+    email,
+  } = req.query;
+
+  const sql = `
+    SELECT * FROM accounts 
+    WHERE firstname = ? 
+      AND middlename = ? 
+      AND lastname = ? 
+      AND gender = ? 
+      AND birthday = ? 
+      AND email = ? 
+    LIMIT 1
+  `;
+
+  db.query(sql, [
+    firstname,
+    middlename,
+    lastname,
+    gender,
+    birthday,
+    email,], (err, result) => {
+    if (err) {
+      console.error("❌ Error checking:", err);
+      return res.status(500).json({ message: "❌ Database error" });
+    }
+
+    if (result.length > 0) {
+      // Account found
+      return res.status(200).json({
+        exists: true,
+        message: "⚠️ Account already exists.",
+      });
+    } else {
+      // No account
+      return res.status(200).json({
+        exists: false,
+        message: "✅ No account found",
+      });
+    }
+  });
+});
+
+
 
 
 app.post("/register", (req, res) => {
