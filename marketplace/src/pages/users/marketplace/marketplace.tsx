@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 export default function Marketplace() {
@@ -57,6 +57,10 @@ export default function Marketplace() {
       if (sortBy === "rating") return b.rating - a.rating;
       return 0;
     });
+
+  useEffect(() => {
+    document.title = "Marketplace"
+  }, [])
 
   return (
     <div className="pb-14">

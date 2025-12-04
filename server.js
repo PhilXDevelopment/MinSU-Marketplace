@@ -14,14 +14,14 @@ app.get("/", (req, res) => {
 });
 
 
-(async () => {
-  try {
-    await migrate();
-    console.log("Migration completed!");
-  } catch (err) {
-    console.error("Migration error:", err);
-  }
-})();
+// (async () => {
+//   try {
+//     await migrate();
+//     console.log("Migration completed!");
+//   } catch (err) {
+//     console.error("Migration error:", err);
+//   }
+// })();
 
 // Start server
 app.listen(PORT, () => {

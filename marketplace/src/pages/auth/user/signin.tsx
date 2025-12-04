@@ -1,7 +1,10 @@
-import React from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Login() {
+  useEffect(() => {
+    document.title = "Login"
+  }, [])
   return (
     <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
@@ -48,30 +51,14 @@ export default function Login() {
             <div className="flex-1 h-px bg-emerald-100"></div>
           </div>
 
-          {/* GOOGLE */}
-          <button
-            className="w-full bg-white text-gray-800 py-3 rounded-xl font-semibold 
-          flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-100 transition"
-          >
-            <img src="/google.png" className="w-5" />
-            Continue with Google
-          </button>
 
-          {/* FACEBOOK */}
-          <button
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold 
-          flex items-center justify-center gap-3 hover:bg-blue-700 transition"
-          >
-            <img src="/facebook.png" className="w-5" />
-            Continue with Facebook
-          </button>
         </div>
 
         {/* NO ACCOUNT LINK */}
         <p className="text-center text-gray-600 text-sm mt-4">
           Don't have an account?{" "}
           <Link
-            to="/auth/register"
+            to="/auth/signup"
             className="text-emerald-700 font-semibold hover:underline"
           >
             Register

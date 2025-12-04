@@ -1,11 +1,18 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { FaUser, FaBars, FaTimes } from "react-icons/fa";
-import Marketplace from "../../users/marketplace/marketplace";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Marketplace_Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
+
+
+
+  useEffect(() => {
+
+  }, []); //
   return (
     <div className="min-h-screen bg-emerald-50 text-gray-800 flex flex-col">
       {/* Top Navigation Bar */}
@@ -63,7 +70,7 @@ export default function Marketplace_Layout() {
 
       {/* CONTENT SECTION */}
       <div className="p-4 flex-1">
-        <Outlet/>
+        <Outlet />
       </div>
 
       {/* FOOTER (Shopee Web Style) */}

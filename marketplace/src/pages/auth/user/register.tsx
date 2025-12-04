@@ -1,84 +1,174 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Register() {
+  const [formData, setFormData] = useState({
+    avatar: "",
+    firstname: "",
+    middlename: "",
+    lastname: "",
+    gender: "",
+    birthday: "",
+    email: "",
+    password: "",
+    schoolid: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "avatar" && files.length > 0) {
+      setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(formData);
+    // Call your API to register user here
+  };
+
+  useEffect(() => {
+    document.title = "Create account"
+  }, [])
+
   return (
     <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
-        {/* TITLE */}
+      <div className="w-full max-w-2xl bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <h2 className="text-center text-2xl font-bold text-emerald-700 mb-6 tracking-wide">
           Create Account
         </h2>
 
-        <div className="space-y-5">
-          {/* FULL NAME */}
-          <div>
-            <label className="text-gray-600 text-sm">Full Name</label>
+        <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
+          {/* Avatar */}
+          <div className="col-span-1 md:col-span-2">
+            <label className="text-gray-600 text-sm">Avatar</label>
             <input
-              type="text"
-              placeholder="Enter full name"
-              className="w-full mt-1 p-3 rounded-xl bg-white border border-emerald-200 
-              text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+              type="file"
+              name="avatar"
+              onChange={handleChange}
+              className="w-full mt-1 p-2 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
 
-          {/* EMAIL */}
+          {/* First Name */}
           <div>
+            <label className="text-gray-600 text-sm">First Name</label>
+            <input
+              type="text"
+              name="firstname"
+              placeholder="Enter first name"
+              value={formData.firstname}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+          </div>
+
+          {/* Middle Name */}
+          <div>
+            <label className="text-gray-600 text-sm">Middle Name</label>
+            <input
+              type="text"
+              name="middlename"
+              placeholder="Enter middle name"
+              value={formData.middlename}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label className="text-gray-600 text-sm">Last Name</label>
+            <input
+              type="text"
+              name="lastname"
+              placeholder="Enter last name"
+              value={formData.lastname}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="text-gray-600 text-sm">Gender</label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Birthday */}
+          <div>
+            <label className="text-gray-600 text-sm">Birthday</label>
+            <input
+              type="date"
+              name="birthday"
+              value={formData.birthday}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+          </div>
+
+          {/* Email */}
+          <div className="col-span-1 md:col-span-2">
             <label className="text-gray-600 text-sm">Email</label>
             <input
               type="email"
+              name="email"
               placeholder="Enter email"
-              className="w-full mt-1 p-3 rounded-xl bg-white border border-emerald-200 
-              text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
 
-          {/* PASSWORD */}
-          <div>
+          {/* Password */}
+          <div className="col-span-1 md:col-span-2">
             <label className="text-gray-600 text-sm">Password</label>
             <input
               type="password"
+              name="password"
               placeholder="Create password"
-              className="w-full mt-1 p-3 rounded-xl bg-white border border-emerald-200 
-              text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
 
-          {/* CREATE ACCOUNT BUTTON */}
-          <button
-            className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 
-            text-white font-semibold shadow-sm transition"
-          >
-            Create Account
-          </button>
-
-          {/* DIVIDER */}
-          <div className="flex items-center gap-3 py-1">
-            <div className="flex-1 h-px bg-emerald-100"></div>
-            <span className="text-gray-500 text-xs">OR</span>
-            <div className="flex-1 h-px bg-emerald-100"></div>
+          {/* School ID */}
+          <div className="col-span-1 md:col-span-2">
+            <label className="text-gray-600 text-sm">School ID (Optional)</label>
+            <input
+              type="text"
+              name="schoolid"
+              placeholder="Enter school ID"
+              value={formData.schoolid}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
           </div>
 
-          {/* GOOGLE */}
-          <button
-            className="w-full bg-white text-gray-800 py-3 rounded-xl font-semibold 
-            flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-100 transition"
-          >
-            <img src="/google.png" className="w-5" />
-            Sign up with Google
-          </button>
+          {/* Submit button */}
+          <div className="col-span-1 md:col-span-2">
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-sm transition"
+            >
+              Create Account
+            </button>
+          </div>
+        </form>
 
-          {/* FACEBOOK */}
-          <button
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold 
-            flex items-center justify-center gap-3 hover:bg-blue-700 transition"
-          >
-            <img src="/facebook.png" className="w-5" />
-            Sign up with Facebook
-          </button>
-        </div>
-
-        {/* ALREADY HAVE ACCOUNT */}
         <p className="text-center text-gray-600 text-sm mt-4">
           Already have an account?{" "}
           <Link

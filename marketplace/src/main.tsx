@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, replace, RouterProvider } from "react-router-dom";
 
 // Pages and layouts
 import Showcase from "./pages/users/profile/showcase/showcase";
@@ -13,8 +13,11 @@ import StorePage from "./pages/users/marketplace/tabs/store";
 import ViewProduct from "./pages/users/marketplace/tabs/viewproduct";
 import CheckoutPage from "./pages/users/marketplace/tabs/checkout";
 
-// Define routes
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/marketplace" replace />
+  },
   {
     path: "/auth",
     children: [
@@ -24,10 +27,10 @@ const router = createBrowserRouter([
   },
   {
     path: "/marketplace",
-    element: <Marketplace_Layout />, // This is the layout
+    element: <Marketplace_Layout />, // layout wrapper
     children: [
-      { index: true, element: <Marketplace /> }, // Main marketplace page
-      { path: "store/:id", element: <StorePage /> }, // Now correctly nested inside layout
+      { index: true, element: <Marketplace /> },
+      { path: "store/:id", element: <StorePage /> },
       { path: "product/:id", element: <ViewProduct /> },
       { path: "checkout-order/:id", element: <CheckoutPage /> },
     ],
@@ -36,7 +39,7 @@ const router = createBrowserRouter([
     path: "/myprofile",
     element: <Profile_Layout />,
     children: [
-      { index: true, element: <Showcase /> }, // User profile page
+      { index: true, element: <Showcase /> },
     ],
   },
 ]);
