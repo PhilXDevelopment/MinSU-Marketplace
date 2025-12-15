@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaPrint, FaTimes } from "react-icons/fa";
+import { useSocket } from "../../../../../../../socketcontext";
 
 interface ProductDataProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ export default function ProductData({
   productid,
   apiUrl,
 }: ProductDataProps) {
+  const socket = useSocket();
   const [product, setProduct] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState("PENDINGS");
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -84,6 +86,19 @@ export default function ProductData({
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    document.title = "Marketplace | Profile | Shop";
+    fetchProductData();
+    const refreshproducts = () => {
+      fetchProductData();
+    };
+    if (!socket) return;
+    socket.on("product_update", refreshproducts);
+    return () => {
+      socket.off("product_update");
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (isOpen) fetchProductData();

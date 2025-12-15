@@ -26,6 +26,7 @@ import Kyc from "./pages/auth/user/kyc";
 import AdminRoutes from "./restriction/admin";
 import AdminKyc from "./pages/admin/tabs/kyc";
 import MyAddresses from "./pages/users/settings/address";
+import { SocketProvider } from "./socketcontext";
 
 // ---------------------------------------------------------------------------
 // CLEAN & COMPLETE ROUTER
@@ -178,6 +179,8 @@ const router = createBrowserRouter([
 // ---------------------------------------------------------------------------
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <SocketProvider>
+      <RouterProvider router={router} />
+    </SocketProvider>
   </StrictMode>
 );

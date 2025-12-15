@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useSocket } from "../../../socketcontext";
 
 interface Product {
   productid: string;
@@ -21,6 +22,7 @@ interface User {
 }
 
 export default function Marketplace() {
+  const socket = useSocket();
   const location = useLocation();
   const isMarketplacePage = location.pathname === "/marketplace";
 
@@ -63,10 +65,28 @@ export default function Marketplace() {
     setLoading(false);
   };
 
+  // --- Debounced refresh function ---
+  let refreshTimeout: number;
+  const refreshMarketplace = () => {
+    if (refreshTimeout) clearTimeout(refreshTimeout);
+    refreshTimeout = window.setTimeout(() => {
+      fetchProducts();
+    }, 200); // 200ms delay
+  };
+
+  // --- Socket listener setup ---
   useEffect(() => {
     document.title = "Marketplace";
     fetchProducts();
-  }, []);
+
+    if (!socket) return;
+    const handleProductUpdate = () => refreshMarketplace();
+    socket.on("product_updated", handleProductUpdate);
+
+    return () => {
+      socket.off("product_updated", handleProductUpdate);
+    };
+  }, [socket]);
 
   // Add to cart
   const addToCart = async (productid: string) => {

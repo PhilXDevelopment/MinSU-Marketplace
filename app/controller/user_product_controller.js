@@ -1,5 +1,6 @@
 import { stat } from "fs";
 import pool from "../db.js";
+import { getIO } from "../socket.js";
 import { v4 as uuidv4 } from "uuid";
 
 // Show products of a specific user
@@ -123,13 +124,12 @@ export const addproduct = async (req, res) => {
     }
 
     await connection.commit();
+    getIO().emit("product_updated");
     res.status(200).json({ message: "Product added successfully" });
   } catch (error) {
     await connection.rollback();
     console.error("ADD PRODUCT ERROR:", error);
     res.status(500).json({ message: "Server error", error: error.message });
-  } finally {
-    connection.release();
   }
 };
 
@@ -200,7 +200,6 @@ export const viewproduct = async (req, res) => {
       in_liked: rows[0].in_liked,
       images: rows.map((r) => r.image).filter((img) => img !== null),
     };
-
     return res
       .status(200)
       .json({ message: "Product retrieved successfully", product, seller });
@@ -280,6 +279,7 @@ export const storedata = async (req, res) => {
 
     const products = Object.values(productMap);
 
+    getIO().emit("product_updated");
     return res
       .status(200)
       .json({ message: "Store data loaded", user, products });
@@ -311,7 +311,7 @@ export const addtocart = async (req, res) => {
       "INSERT INTO carts (cartid, userid, productid, status) VALUES (UUID(), ?, ?, 'PENDING')",
       [userid, productid]
     );
-
+    getIO().emit("product_updated");
     return res.json({ message: "Added to cart", in_cart: 1 });
   } catch (error) {
     console.error(error);
@@ -341,7 +341,7 @@ export const likedproduct = async (req, res) => {
       "INSERT INTO likes (likesid, userid, productid) VALUES (UUID(), ?, ?)",
       [userid, productid]
     );
-
+    getIO().emit("product_updated");
     return res.json({ message: "Liked", in_liked: 1 });
   } catch (error) {
     console.error(error);
@@ -353,8 +353,8 @@ export const productdata = async (req, res) => {
   const { productid } = req.body;
 
   try {
-const [rows] = await pool.query(
-  `SELECT 
+    const [rows] = await pool.query(
+      `SELECT 
       p.productid,
       p.userid,
       p.name,
@@ -437,21 +437,18 @@ const [rows] = await pool.query(
 
    FROM products p
    WHERE p.productid = ?`,
-  [productid]
-);
-
+      [productid]
+    );
 
     if (!rows.length) {
       return res.status(404).json({ message: "Product not found" });
     }
-
     res.json(rows[0]); // Send the product with images, orders, and statuses
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
-
 
 export const order_bulk_action = async (req, res) => {
   const { orders, status } = req.body;
@@ -467,11 +464,11 @@ export const order_bulk_action = async (req, res) => {
           `UPDATE order_status 
            SET status = ?, created_at = NOW()
            WHERE orderid = ?`,
-          [status,orderid]
+          [status, orderid]
         )
       )
     );
-
+    getIO().emit("product_updated");
     res.status(200).json({
       message: "Orders approved successfully",
       approved_count: orders.length,
@@ -481,7 +478,6 @@ export const order_bulk_action = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 export const showcase = async (req, res) => {
   const { userid } = req.body;
@@ -500,10 +496,11 @@ export const showcase = async (req, res) => {
       [userid]
     );
 
-    res.json({ success: true, products:products});
+    res.json({ success: true, products: products });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: "Server error" });
+  } finally {
   }
 };
 

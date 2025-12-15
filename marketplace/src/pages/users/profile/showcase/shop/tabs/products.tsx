@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AddProduct from "./modal/addproduct";
 import axios from "axios";
 import ProductData from "./tabs/productdata";
+import { useSocket } from "../../../../../../socketcontext";
 
 // User & Product interfaces
 interface User {
@@ -46,6 +47,7 @@ const toWordDate = (dateStr: string) => {
 };
 
 export default function MyProducts() {
+  const socket = useSocket();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,8 +98,17 @@ export default function MyProducts() {
   };
 
   useEffect(() => {
+    document.title = "Marketplace | Profile | Shop";
     displayProducts();
-  }, []);
+    const refreshproducts = () => {
+      displayProducts();
+    };
+    if (!socket) return;
+    socket.on("product_update", refreshproducts);
+    return () => {
+      socket.off("product_update");
+    };
+  }, [socket]);
 
   // Prepare filter options
   const categories = Array.from(

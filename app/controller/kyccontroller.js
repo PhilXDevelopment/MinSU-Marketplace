@@ -1,7 +1,7 @@
 import pool from "../db.js";
-import { io } from "../../server.js"; // import io
-import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
 import { v4 as uuidv4 } from "uuid";
+import { getIO } from "../socket.js";
 
 export const showKyc = async (req, res) => {
   try {
@@ -22,10 +22,10 @@ export const showKyc = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
+  } finally {
+    getIO().emit("kyc_update");
   }
 };
-
-
 
 export const kycprocess = async (req, res) => {
   const connection = await pool.getConnection();
@@ -52,7 +52,6 @@ export const kycprocess = async (req, res) => {
 
     const kycRow = kycRows[0];
     if (status == "DECLINED") {
-
     }
 
     if (status == "DECLINED") {
@@ -109,7 +108,6 @@ export const kycprocess = async (req, res) => {
       [verifyid, kycRow.userid, adminid, "FULLY VERIFIED"] // ALWAYS FULLY VERIFIED
     );
 
-
     // 4. Get user info
     const [userRows] = await connection.query(
       "SELECT * FROM users WHERE userid = ?",
@@ -118,13 +116,8 @@ export const kycprocess = async (req, res) => {
 
     const user = userRows[0];
 
-    // 5. Commit transaction first
     await connection.commit();
 
-    // 6. Notify via websocket
-    io.emit("kycUpdated", { kycid, status });
-
-    // 7. Send email
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: process.env.MAIL_PORT,
@@ -147,6 +140,7 @@ export const kycprocess = async (req, res) => {
       text: mailText,
     });
 
+    getIO().emit("kyc_update");
     return res.status(200).json({
       message:
         status === "APPROVED" ? "Approval successful" : "Decline successful",
@@ -155,8 +149,5 @@ export const kycprocess = async (req, res) => {
     console.error(error);
     await connection.rollback();
     return res.status(500).json({ message: "Server error" });
-  } finally {
-    connection.release();
   }
 };
-

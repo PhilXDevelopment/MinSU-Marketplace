@@ -83,7 +83,7 @@ export const create_order = async (req, res) => {
     // Commit transaction
     await connection.commit();
     connection.release();
-
+    getIO().emit("order_update");
     return res.status(200).json({
       success: true,
       message: "Order created successfully",
@@ -101,8 +101,6 @@ export const create_order = async (req, res) => {
     });
   }
 };
-
-
 
 export const mypurchases = async (req, res) => {
   const { userid } = req.body;
@@ -201,7 +199,7 @@ export const mypurchases = async (req, res) => {
       `,
       [userid]
     );
-
+    getIO().emit("order_update");
     return res.status(200).json({
       status: true,
       purchases: rows,

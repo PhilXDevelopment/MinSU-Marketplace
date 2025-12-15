@@ -11,10 +11,12 @@ import {
 } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useSocket } from "../../../../socketcontext";
 
 type TabType = "showcase" | "shop" | "purchases";
 
 export default function Showcase() {
+  const socket = useSocket();
   const [activeTab, setActiveTab] = useState<TabType>("showcase");
   const [activeButton, setActiveButton] = useState<TabType | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -38,9 +40,26 @@ export default function Showcase() {
     }
   };
 
+  let refreshTimeout: number;
+  const refreshshowcase = () => {
+    if (refreshTimeout) clearTimeout(refreshTimeout);
+    refreshTimeout = window.setTimeout(() => {
+      showcase();
+    }, 200); // 200ms delay
+  };
+
   useEffect(() => {
+    document.title = "Marketplace | Profile";
     showcase();
-  }, []);
+
+    if (!socket) return;
+    const handleProductUpdate = () => refreshshowcase();
+    socket.on("product_updated", handleProductUpdate);
+
+    return () => {
+      socket.off("product_updated", handleProductUpdate);
+    };
+  }, [socket]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);

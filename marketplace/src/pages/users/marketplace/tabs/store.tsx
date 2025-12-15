@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiMoreVertical } from "react-icons/fi";
+import { useSocket } from "../../../../socketcontext";
 
 interface User {
   userid: string;
@@ -28,6 +29,7 @@ const toSentenceCase = (text: string | undefined | null): string => {
 };
 
 export default function StorePage() {
+  const socket = useSocket();
   const navigate = useNavigate();
   const { id } = useParams(); // seller userid
 
@@ -67,8 +69,17 @@ export default function StorePage() {
   };
 
   useEffect(() => {
+    document.title = "Marketplace | Store";
     displayStoreData();
-  }, [id]);
+    const refreshMarketplace = () => {
+      displayStoreData();
+    };
+    if (!socket) return;
+    socket.on("product_update", refreshMarketplace);
+    return () => {
+      socket.off("product_update");
+    };
+  }, [socket]);
 
   const filterCategory = (category: string) => {
     setActiveCategory(category);

@@ -11,8 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
 import { Server } from "socket.io";
-
-import bodyParser from "body-parser";
+import { initSocket } from "./app/socket.js";
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -21,11 +20,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// HTTP + Socket.io
+// HTTP server
 const server = http.createServer(app);
+
+// Socket.IO server
 export const io = new Server(server, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true, // ⚡ important for frontend
+  },
 });
+
+// Initialize Socket listeners
+initSocket(io);
 
 // Middleware
 app.use(cookieParser());
@@ -45,18 +53,6 @@ app.use("/api/order", orderRoutes);
 
 // Test route
 app.get("/", (req, res) => res.send("Server is running!"));
-
-// WebSocket: broadcast events
-io.on("connection", (socket) => {
-  console.log("New client connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
-});
-
-// Make io available in routes/controllers
-app.set("io", io);
 
 // Start server
 server.listen(PORT, () =>

@@ -10,6 +10,7 @@ export const getAddress = async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM address WHERE userid = ?", [
       userid,
     ]);
+    getIO().emit("settings_update");
     res.json({ address: rows });
   } catch (err) {
     console.error(err);
@@ -42,6 +43,7 @@ export const addAddress = async (req, res) => {
       ]
     );
 
+    getIO().emit("settings_update");
     res.status(201).json({ message: "Address added", addressid });
   } catch (err) {
     console.error(err); // <-- check what this prints

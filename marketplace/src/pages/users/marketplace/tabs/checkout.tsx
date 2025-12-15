@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSocket } from "../../../../socketcontext";
 
 interface User {
   firstname: string;
@@ -31,6 +32,7 @@ interface Product {
 }
 
 export default function CheckoutPage() {
+  const socket = useSocket();
   const navigate = useNavigate();
   const { id } = useParams();
   const apiUrl = "http://localhost:3000/";
@@ -96,6 +98,21 @@ export default function CheckoutPage() {
     fetchAddresses();
     fetchProduct();
   }, []);
+
+  useEffect(() => {
+    document.title = "Marketplace | Checkout";
+    fetchAddresses();
+    fetchProduct();
+    const refreshcheckout = () => {
+      fetchAddresses();
+      fetchProduct();
+    };
+    if (!socket) return;
+    socket.on("product_update", refreshcheckout);
+    return () => {
+      socket.off("product_update");
+    };
+  }, [socket]);
 
   const handleSubmitOrder = async () => {
     if (!selectedAddress) {

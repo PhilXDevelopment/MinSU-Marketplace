@@ -2,16 +2,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import KycModal from "./modal/kycmodal";
 import { ToastContainer } from "react-toastify";
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:3000"); // initialize outside the component
+import { useSocket } from "../../../socketcontext";
 
 export default function AdminKyc() {
   const apiUrl = "http://localhost:3000/";
   const [pending, setPending] = useState([]);
   const [selectedKyc, setSelectedKyc] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-
+  const socket = useSocket();
 
   interface User {
     firstname: string;
@@ -19,18 +17,16 @@ export default function AdminKyc() {
     avatar: string;
     userid: string;
   }
-   let user: User | null = null;
-   const storedUser = localStorage.getItem("user");
-   if (storedUser) {
-     try {
-       user = JSON.parse(storedUser);
-     } catch (err) {
-       console.error("Invalid user data in localStorage", err);
-       user = null;
-     }
-   }
-
-
+  let user: User | null = null;
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    try {
+      user = JSON.parse(storedUser);
+    } catch (err) {
+      console.error("Invalid user data in localStorage", err);
+      user = null;
+    }
+  }
 
   const displayKyc = async () => {
     try {
@@ -42,19 +38,16 @@ export default function AdminKyc() {
   };
 
   useEffect(() => {
-    // Initial load
-    displayKyc();
+    const refreshKyc = () => {
+      displayKyc(); // async call, but wrapper is synchronous
+    };
 
-    // Listen for KYC updates
-    socket.on("kycUpdated", () => {
-      console.log("KYC updated, refreshing table...");
-      displayKyc();
-    });
+    socket.on("kyc_update", refreshKyc);
 
     return () => {
-      socket.off("kycUpdated"); // cleanup listener
+      socket.off("kyc_update", refreshKyc);
     };
-  }, []);
+  }, [socket]);
 
   const openModal = (kyc) => {
     setSelectedKyc(kyc);

@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 import path from "path"; // <
 import fs from "fs";
 import dotenv from "dotenv";
+import { getIO } from "../socket.js";
 dotenv.config();
 
 // ------------------- SIGN IN USER -------------------
@@ -78,7 +79,7 @@ export const signInUser = async (req, res) => {
       subject: "Your Verification Code",
       text: `Hello ${user.firstname},\n\nYour login verification code is: ${code}\n\n`,
     });
-
+    getIO().emit("authentication_update");
     return res.status(200).json({
       message: "Code was sent to your email!",
     });
@@ -99,11 +100,10 @@ export const onsession = async (req, res) => {
       return res.status(400).json({ error: "Please login first" });
     }
 
-   const [rows] = await pool.query(
-     "SELECT * FROM sessions WHERE userid = ? ORDER BY datetime DESC LIMIT 1",
-     [userid]
-   );
-
+    const [rows] = await pool.query(
+      "SELECT * FROM sessions WHERE userid = ? ORDER BY datetime DESC LIMIT 1",
+      [userid]
+    );
 
     if (rows.length === 0) {
       return res.json({ session: null, message: "No active session" });
@@ -126,7 +126,6 @@ export const onsession = async (req, res) => {
       [rows[0].userid]
     );
 
-
     return res.json({
       session: rows[0],
       user: userRows[0],
@@ -141,22 +140,22 @@ export const onsession = async (req, res) => {
   }
 };
 
-
-export const logOut=async(req, res)=>{
-try {
-  const {userid}=req.body
-      const sessionId = uuidv4();
-      const datetime = new Date();
-         await pool.query(
-           "INSERT INTO sessions (sessionid, userid, status, datetime) VALUES (?, ?, ?, ?)",
-           [sessionId, userid, "LOGGED OUT", datetime]
-         );
-     res.status(200).json({ message: "Server error", error: err.message });
-} catch (error) {
-     console.error("CREATE USER ERROR:", err);
+export const logOut = async (req, res) => {
+  try {
+    const { userid } = req.body;
+    const sessionId = uuidv4();
+    const datetime = new Date();
+    await pool.query(
+      "INSERT INTO sessions (sessionid, userid, status, datetime) VALUES (?, ?, ?, ?)",
+      [sessionId, userid, "LOGGED OUT", datetime]
+    );
+    getIO().emit("authentication_update");
+    res.status(200).json({ message: "Server error", error: err.message });
+  } catch (error) {
+    console.error("CREATE USER ERROR:", err);
     res.status(500).json({ message: "Server error", error: err.message });
-}
-}
+  }
+};
 // ------------------- CREATE USER -------------------
 // ------------------- CREATE USER -------------------
 export const createUser = async (req, res) => {
@@ -176,7 +175,8 @@ export const createUser = async (req, res) => {
     if (req.file) {
       // Ensure uploads/avatars folder exists
       const uploadDir = path.join(process.cwd(), "uploads/avatars");
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      if (!fs.existsSync(uploadDir))
+        fs.mkdirSync(uploadDir, { recursive: true });
 
       // Generate unique filename
       const filename = `${uuidv4()}_${req.file.originalname}`;
@@ -222,7 +222,18 @@ export const createUser = async (req, res) => {
     await pool.query(
       `INSERT INTO users (userid, avatar, firstname, middlename, lastname, gender, birthday, email, password, schoolid)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userid, avatar, firstname, middlename || "", lastname, gender, birthday, email, hashedPassword, schoolid || null]
+      [
+        userid,
+        avatar,
+        firstname,
+        middlename || "",
+        lastname,
+        gender,
+        birthday,
+        email,
+        hashedPassword,
+        schoolid || null,
+      ]
     );
 
     // Insert terms policy
@@ -257,16 +268,16 @@ export const createUser = async (req, res) => {
       subject: "Your Activation Code",
       text: `Hello ${firstname},\n\nYour verification code is: ${code}\n\nThank you for registering!`,
     });
-
+    getIO().emit("authentication_update");
     res.status(201).json({
-      message: "Account created successfully! Verification code sent to your email.",
+      message:
+        "Account created successfully! Verification code sent to your email.",
     });
   } catch (err) {
     console.error("CREATE USER ERROR:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 export const verifyUser = async (req, res) => {
   try {
@@ -302,16 +313,16 @@ export const verifyUser = async (req, res) => {
       [sessionId, token.userid, "LOGGED IN", datetime]
     );
 
-   const [data] = await pool.query(
-  "SELECT * FROM users WHERE userid = ? LIMIT 1",
-  [token.userid]
-);
+    const [data] = await pool.query(
+      "SELECT * FROM users WHERE userid = ? LIMIT 1",
+      [token.userid]
+    );
 
-const user = data[0]; // <--- actual user object
-
-
+    const user = data[0]; // <--- actual user object
+    getIO().emit("authentication_update");
     res.status(200).json({
-      message: "Account successfully verified!",user:user
+      message: "Account successfully verified!",
+      user: user,
     });
   } catch (err) {
     console.error("VERIFY USER ERROR:", err);
@@ -321,9 +332,9 @@ const user = data[0]; // <--- actual user object
 
 export const verifyToken = async (req, res) => {
   try {
-     const connection = await pool.getConnection();
+    const connection = await pool.getConnection();
     const { code } = req.body;
-  await connection.beginTransaction();
+    await connection.beginTransaction();
     if (!code) {
       return res.status(404).json({ message: "Enter the verification code" });
     }
@@ -354,8 +365,8 @@ export const verifyToken = async (req, res) => {
       [sessionId, token.userid, "LOGGED IN", datetime]
     );
 
- const [userRows] = await pool.query(
-   `
+    const [userRows] = await pool.query(
+      `
     SELECT 
       u.*,
       v.userid AS verify_userid,
@@ -369,26 +380,26 @@ export const verifyToken = async (req, res) => {
     LEFT JOIN kyc k ON u.userid = k.userid
     WHERE u.userid = ?
 `,
-   [token.userid]
- );
-    if(userRows.length==0){
+      [token.userid]
+    );
+    if (userRows.length == 0) {
       await connection.rollback();
-        res.status(401).json({
-          message: "Unauthorized Activity",
-        });
+      res.status(401).json({
+        message: "Unauthorized Activity",
+      });
     }
 
-    const user=userRows[0]
-
+    const user = userRows[0];
+    getIO().emit("authentication_update");
     res.status(200).json({
-      message: "Login successful!",user:user
+      message: "Login successful!",
+      user: user,
     });
   } catch (err) {
     console.error("VERIFY USER ERROR:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 export const submitkyc = async (req, res) => {
   try {
@@ -448,8 +459,8 @@ export const submitkyc = async (req, res) => {
       ]
     );
 
- const [userRows] = await pool.query(
-   `
+    const [userRows] = await pool.query(
+      `
     SELECT 
       u.*,
       v.userid AS verify_userid,
@@ -463,11 +474,13 @@ export const submitkyc = async (req, res) => {
     LEFT JOIN kyc k ON u.userid = k.userid
     WHERE u.userid = ?
 `,
-   [userid]
- );
-    const user=userRows[0]
-
-    return res.status(200).json({ message: "KYC submitted successfully!", user });
+      [userid]
+    );
+    const user = userRows[0];
+    getIO().emit("authentication_update");
+    return res
+      .status(200)
+      .json({ message: "KYC submitted successfully!", user });
   } catch (err) {
     console.error("SUBMIT KYC ERROR:", err);
     return res
