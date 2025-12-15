@@ -81,7 +81,7 @@ export default function ViewProduct() {
       const sellerData = res.data.seller;
       setSeller({
         userid: sellerData.userid,
-        avatar: `${apiUrl}${sellerData.avatar.replace(/\\/g, "/")}`,
+        avatar: `${sellerData.avatar}`,
         firstname: sellerData.firstname,
         lastname: sellerData.lastname,
         location: "Philippines",
@@ -230,11 +230,10 @@ export default function ViewProduct() {
                 key={index}
                 src={`${apiUrl}${img}`}
                 onClick={() => setCurrentImage(index)}
-                className={`w-20 h-20 rounded-lg object-cover cursor-pointer border ${
-                  index === currentImage
-                    ? "border-emerald-600"
-                    : "border-gray-300"
-                }`}
+                className={`w-20 h-20 rounded-lg object-cover cursor-pointer border ${index === currentImage
+                  ? "border-emerald-600"
+                  : "border-gray-300"
+                  }`}
                 alt={`thumb-${index}`}
               />
             ))}
@@ -254,9 +253,8 @@ export default function ViewProduct() {
             {/* Description */}
             <div
               ref={descRef}
-              className={`mt-4 text-gray-600 overflow-hidden transition-all ${
-                showFullDesc ? "max-h-full" : "max-h-24"
-              }`}
+              className={`mt-4 text-gray-600 overflow-hidden transition-all ${showFullDesc ? "max-h-full" : "max-h-24"
+                }`}
             >
               {product.description}
             </div>
@@ -275,11 +273,10 @@ export default function ViewProduct() {
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handleAddToCart}
-                className={`px-6 py-2 rounded-xl transition active:scale-95 flex items-center gap-2 ${
-                  product.in_cart === 1
-                    ? "bg-gray-400 text-white hover:bg-gray-500"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
-                }`}
+                className={`px-6 py-2 rounded-xl transition active:scale-95 flex items-center gap-2 ${product.in_cart === 1
+                  ? "bg-gray-400 text-white hover:bg-gray-500"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }`}
               >
                 <FaShoppingCart /> {product.in_cart === 1 ? "Remove" : "Add"}{" "}
                 Cart
@@ -294,11 +291,10 @@ export default function ViewProduct() {
 
               <button
                 onClick={handleLike}
-                className={`px-6 py-2 rounded-xl transition active:scale-95 flex items-center gap-2 ${
-                  product.in_liked === 1
-                    ? "bg-pink-500 text-white hover:bg-pink-600"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                }`}
+                className={`px-6 py-2 rounded-xl transition active:scale-95 flex items-center gap-2 ${product.in_liked === 1
+                  ? "bg-pink-500 text-white hover:bg-pink-600"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
               >
                 <FaHeart /> {product.in_liked === 1 ? "Liked" : "Like"}
               </button>
@@ -308,7 +304,7 @@ export default function ViewProduct() {
           {/* Seller Info */}
           <div className="mt-6 flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-emerald-100">
             <img
-              src={seller.avatar}
+              src={`${apiUrl}uploads/avatars/${seller.avatar}`}
               alt={`${seller.firstname} ${seller.lastname}`}
               className="w-16 h-16 rounded-full border-2 border-emerald-400"
             />
@@ -329,11 +325,10 @@ export default function ViewProduct() {
             {user?.userid !== seller.userid && (
               <button
                 onClick={toggleFollow}
-                className={`ml-auto px-4 py-2 rounded-lg font-medium text-white transition flex items-center gap-1 ${
-                  isFollowing
-                    ? "bg-gray-400 hover:bg-gray-500"
-                    : "bg-emerald-500 hover:bg-emerald-600"
-                }`}
+                className={`ml-auto px-4 py-2 rounded-lg font-medium text-white transition flex items-center gap-1 ${isFollowing
+                  ? "bg-gray-400 hover:bg-gray-500"
+                  : "bg-emerald-500 hover:bg-emerald-600"
+                  }`}
               >
                 <FaUserPlus /> {isFollowing ? "Following" : "Follow"}
               </button>

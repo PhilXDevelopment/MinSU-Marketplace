@@ -51,19 +51,63 @@ export const kycprocess = async (req, res) => {
     }
 
     const kycRow = kycRows[0];
-    if(status=="DECLINED"){
-      
+    if (status == "DECLINED") {
+
+    }
+
+    if (status == "DECLINED") {
+      // 4. Get user info
+      const [userRows] = await connection.query(
+        "SELECT * FROM users WHERE userid = ?",
+        [kycRow.userid]
+      );
+
+      const user = userRows[0];
+
+      // 5. Commit transaction first
+      await connection.commit();
+
+      // 6. Notify via websocket
+      io.emit("kycUpdated", { kycid, status });
+
+      // 7. Send email
+      const transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST,
+        port: process.env.MAIL_PORT,
+        secure: process.env.MAIL_PORT == 465,
+        auth: {
+          user: process.env.MAIL_USERNAME,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
+
+      const mailText =
+        status === "APPROVED"
+          ? `Hello ${user.firstname},\n\nYour account is now fully verified. Please re-login your account. Thank you!`
+          : `Hello ${user.firstname},\n\nYour KYC request was declined due to unmatched data.`;
+
+      await transporter.sendMail({
+        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+        to: user.email,
+        subject: "Marketplace KYC Request",
+        text: mailText,
+      });
+
+      return res.status(200).json({
+        message:
+          status === "APPROVED" ? "Approval successful" : "Decline successful",
+      });
     }
 
     // 3. Insert into verify table USING REAL STATUS
-const verifyid = uuidv4();
-await connection.query(
-  `
+    const verifyid = uuidv4();
+    await connection.query(
+      `
   INSERT INTO verify (verifyid, userid, adminid, status)
   VALUES (?, ?, ?, ?)
   `,
-  [verifyid, kycRow.userid, adminid, "FULLY VERIFIED"] // ALWAYS FULLY VERIFIED
-);
+      [verifyid, kycRow.userid, adminid, "FULLY VERIFIED"] // ALWAYS FULLY VERIFIED
+    );
 
 
     // 4. Get user info
